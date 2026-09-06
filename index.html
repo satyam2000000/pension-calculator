@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="पेंशन कैलकुलेटर">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="छत्तीसगढ़ शासकीय पेंशन, ग्रेच्युटी, GIS, HRA एवं अवकाश नकदीकरण कैलकुलेटर">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>शासकीय वित्तीय मास्टर कैलकुलेटर · पेंशन · ग्रेच्युटी · GIS · HRA</title>
+<style>
+:root {
+  --primary: #0f172a;
+  --primary-light: #1e293b;
+  --accent: #0ea5e9;
+  --accent-dark: #0284c7;
+  --success: #059669;
+  --success-dark: #047857;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --radius: 12px;
+  --shadow: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
+  --shadow-lg: 0 10px 25px -5px rgba(0,0,0,.08), 0 8px 10px -6px rgba(0,0,0,.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 0 0 48px;
+}
+
+/* ========== PASSWORD GATE ========== */
+#pw-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: linear-gradient(145deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+#pw-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 40px 36px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,.4);
+  text-align: center;
+}
+
+#pw-box .lock-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 24px;
+}
+
+#pw-box h2 {
+  color: var(--primary);
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+#pw-box p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+#pw-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 1rem;
+  text-align: center;
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+}
+
+#pw-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14,165,233,.15);
+}
+
+#pw-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--success), var(--success-dark));
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+#pw-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(5,150,105,.35);
+}
+
+#pw-err {
+  color: #dc2626;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-top: 14px;
+  display: none;
+}
+
+#app-root { display: none; }
+
+/* ========== HEADER ========== */
+.header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  color: #fff;
+  padding: 28px 20px 24px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+
+.header h1 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.header .sub {
+  font-size: 0.88rem;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+/* ========== MAIN WRAPPER ========== */
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ========== TABS ========== */
+.tabs {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: -22px auto 24px;
+  position: relative;
+  z-index: 10;
+  max-width: 980px;
+  padding: 0 16px;
+}
+
+.tab {
+  padding: 11px 18px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.tab.on {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(14,165,233,.35);
+}
+
+/* ========== CARDS ========== */
+.card {
+  display: none;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  padding: 28px 24px;
+  margin-bottom: 20px;
+}
+
+.card.on { display: block; }
+
+.card h2 {
+  color: var(--primary);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e0f2fe;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card h2::before {
+  content: "";
+  width: 4px;
+  height: 20px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* ========== FORM GRID ========== */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 18px;
+}
+
+@media (max-width: 680px) {
+  .grid { grid-template-columns: 1fr; }
+  .header h1 { font-size: 1.2rem; }
+  .card { padding: 20px 16px; }
+}
+
+.full { grid-column: 1 / -1; }
+
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #334155;
+  margin-bottom: 5px;
+}
+
+label small {
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+input, select {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.92rem;
+  background: #fff;
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14,165,233,.12);
+}
+
+input[readonly] {
+  background: #f8fafc;
+  color: #64748b;
+}
+
+/* ========== BUTTON ========== */
+.btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--success), var(--success-dark));
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(5,150,105,.3);
+}
+
+.btn:active { transform: translateY(0); }
+
+/* ========== ERROR ========== */
+.err {
+  display: none;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  font-size: 0.86rem;
+}
+
+/* ========== RESULTS ========== */
+.res {
+  display: none;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 2px dashed #cbd5e1;
+}
+
+.res h3 {
+  font-size: 0.98rem;
+  color: var(--primary);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.res h3 span { color: var(--success); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 11px 14px;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+th {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+td { font-weight: 600; color: #1e293b; }
+
+tr:nth-child(even) td { background: #f8fafc; }
+
+tr:last-child td { border-bottom: none; }
+
+.scroll {
+  max-height: 380px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll th { position: sticky; top: 0; z-index: 1; }
+
+.tot td {
+  background: #ecfdf5 !important;
+  font-weight: 700;
+  color: #065f46;
+}
+
+/* ========== INFO BOX ========== */
+.box {
+  margin-top: 16px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 0.8rem;
+  color: #0c4a6e;
+}
+
+.box h4 {
+  font-size: 0.86rem;
+  color: var(--primary);
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.box ul { padding-left: 18px; }
+
+.box li { margin-bottom: 3px; }
+
+.warn {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+/* ========== RULES SECTION ========== */
+.rule-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 20px 18px;
+  margin-bottom: 16px;
+  transition: box-shadow 0.2s;
+}
+
+.rule-card:hover {
+  box-shadow: var(--shadow);
+}
+
+.rule-card h3 {
+  color: var(--primary);
+  font-size: 0.98rem;
+  margin-bottom: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.rule-card h4 {
+  color: #1e40af;
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin: 14px 0 8px;
+}
+
+.rule-card p,
+.rule-card li {
+  font-size: 0.84rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.rule-card ul {
+  padding-left: 18px;
+  margin-top: 6px;
+}
+
+.rule-card li { margin-bottom: 5px; }
+
+.rule-card code {
+  background: #f1f5f9;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: #0f172a;
+  font-family: ui-monospace, monospace;
+}
+
+.rule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin: 10px 0 6px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.rule-table th {
+  background: #1e293b;
+  color: #fff;
+  padding: 9px 12px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.rule-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.rule-table tr:nth-child(even) td {
+  background: #f8fafc;
+}
+
+.rule-table tr:last-child td {
+  border-bottom: none;
+}
+
+.rule-note {
+  background: #f0f9ff;
+  border-left: 4px solid #0ea5e9;
+  padding: 10px 14px;
+  margin-top: 12px;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.82rem;
+  color: #0c4a6e;
+}
+
+.rule-intro {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  font-size: 0.86rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+/* ========== FOOTER ========== */
+footer {
+  text-align: center;
+  margin-top: 36px;
+  padding: 0 16px;
+}
+
+.badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #f1f5f9;
+  padding: 14px 28px;
+  border-radius: 50px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  box-shadow: var(--shadow);
+}
+
+.badge b {
+  color: #34d399;
+  font-weight: 700;
+}
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="pw-gate">
+  <div id="pw-box">
+    <div class="lock-icon">🔒</div>
+    <h2>सुरक्षित पेंशन कैलकुलेटर</h2>
+    <p>आगे बढ़ने के लिए पासवर्ड दर्ज करें</p>
+    <input type="password" id="pw-input" placeholder="पासवर्ड" autocomplete="off" autofocus>
+    <button type="button" id="pw-btn" onclick="checkPw()">प्रवेश करें</button>
+    <div id="pw-err">गलत पासवर्ड। पुनः प्रयास करें।</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-root">
+
+  <header class="header">
+    <h1>शासकीय वित्तीय मास्टर कैलकुलेटर</h1>
+    <p class="sub">पेंशन · एरियर · GIS · HRA · अवकाश नकदीकरण · आधिकारिक नियम</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab on" id="t1" onclick="go('pen','t1')">पेंशन + एरियर</button>
+    <button class="tab" id="t2" onclick="go('gis','t2')">GIS गणना</button>
+    <button class="tab" id="t3" onclick="go('hra_leave','t3')">HRA एवं Leave</button>
+    <button class="tab" id="t4" onclick="go('rules_tab','t4')">📚 नियम निर्देशिका</button>
+  </div>
+
+  <div class="wrap">
+
+    <!-- TAB 1: PENSION -->
+    <div class="card on" id="pen">
+      <h2>पेंशन · ग्रेच्युटी · मासिक एरियर सारणी</h2>
+      <div class="err" id="err"></div>
+      <div class="grid">
+        <div class="full">
+          <label>लागू नियम</label>
+          <select id="rule">
+            <option value="CG">CG Civil Services (Pension) Rules, 1976</option>
+            <option value="CCS">CCS Pension Rules, 1972</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>पेंशन प्रकार</label>
+          <select id="ptype">
+            <option value="super">अधिवार्षिकी</option>
+            <option value="vrs">स्वैच्छिक (VRS)</option>
+            <option value="invalid">असमर्थता</option>
+            <option value="compulsory">अनिवार्य</option>
+            <option value="family">परिवार 30%</option>
+            <option value="family50">परिवार उच्च 50%</option>
+          </select>
+        </div>
+        <div>
+          <label>अंतिम मूल वेतन (₹)</label>
+          <input type="number" id="pay" value="60000" min="0">
+        </div>
+        <div>
+          <label>DA प्रणाली</label>
+          <select id="daMode" onchange="togDa()">
+            <option value="auto">स्वचालित (ऐतिहासिक)</option>
+            <option value="manual">मैन्युअल</option>
+          </select>
+        </div>
+        <div id="manDa" class="hidden">
+          <label>DA % मैन्युअल</label>
+          <input type="number" id="daIn" value="55" min="0">
+        </div>
+        <div id="autoDa">
+          <label>लागू DA % (ऑटो)</label>
+          <input type="text" id="daShow" readonly value="—">
+        </div>
+        <div>
+          <label>सेवा प्रारंभ तिथि</label>
+          <input type="date" id="join" value="1995-06-15">
+        </div>
+        <div>
+          <label>सेवानिवृत्ति तिथि</label>
+          <input type="date" id="retire" value="2024-06-30" onchange="fetchDa()">
+        </div>
+        <div>
+          <label>एरियर समाप्ति <small>आज / चुनी तारीख</small></label>
+          <input type="date" id="arrearEnd">
+        </div>
+        <div>
+          <label>कम्यूटेशन % (अधिकतम 40)</label>
+          <input type="number" id="cper" min="0" max="40" value="40">
+        </div>
+        <div>
+          <label>कम्यूटेशन फैक्टर</label>
+          <input type="number" id="cfac" step="0.001" value="8.194">
+        </div>
+      </div>
+      <div class="warn">CG: 3 माह+ = 1 छमाही · पेंशन = (मूल × छमाही) ÷ 132 · एरियर = सेवानिवृत्ति से समाप्ति तक मासिक DR सहित</div>
+      <button class="btn" onclick="calc()">पेंशन + एरियर गणना करें</button>
+
+      <div class="res" id="pres">
+        <h3>मुख्य परिणाम — <span id="rname"></span></h3>
+        <table>
+          <tr><th>विवरण</th><th>राशि</th></tr>
+          <tr><td>वास्तविक सेवा</td><td id="r1">-</td></tr>
+          <tr><td>छमाही अवधि</td><td id="r2">-</td></tr>
+          <tr><td>सेवानिवृत्ति पर DA</td><td id="r3">-</td></tr>
+          <tr><td>मूल मासिक पेंशन</td><td id="r4">-</td></tr>
+          <tr><td>कम्यूटेड राशि</td><td id="r5">-</td></tr>
+          <tr><td>शुद्ध मासिक पेंशन</td><td id="r6">-</td></tr>
+          <tr><td>कम्यूटेशन वैल्यू</td><td id="r7">-</td></tr>
+          <tr><td>ग्रेच्युटी (Basic+DA)</td><td id="r8">-</td></tr>
+          <tr><td>परिवार पेंशन 30%</td><td id="r9">-</td></tr>
+        </table>
+
+        <h3 style="margin-top:22px">मासिक पेंशन एवं DR एरियर तालिका</h3>
+        <p style="font-size:.78rem;color:#64748b;margin-bottom:8px">सेवानिवृत्ति से एरियर समाप्ति तक</p>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr><th>क्र.</th><th>माह / वर्ष</th><th>मूल पेंशन</th><th>DR %</th><th>DR राशि</th><th>कुल देय</th></tr>
+            </thead>
+            <tbody id="arrearBody"></tbody>
+          </table>
+        </div>
+        <table style="margin-top:10px">
+          <tr class="tot"><td>कुल महीने</td><td id="arMonths">-</td></tr>
+          <tr class="tot"><td>कुल मूल पेंशन</td><td id="arBasicSum">-</td></tr>
+          <tr class="tot"><td>कुल DR</td><td id="arDrSum">-</td></tr>
+          <tr class="tot"><td><b>कुल एरियर (मूल + DR)</b></td><td id="arGrand"><b>-</b></td></tr>
+        </table>
+        <div class="box"><h4>सूत्र</h4><div id="fbox"></div></div>
+      </div>
+    </div>
+
+    <!-- TAB 2: GIS -->
+    <div class="card" id="gis">
+      <h2>GIS (आधिकारिक वित्त तालिका फैक्टर)</h2>
+      <div class="err" id="gerr"></div>
+      <div class="grid">
+        <div class="full">
+          <label>श्रेणी</label>
+          <select id="ggrp" onchange="setGis()">
+            <option value="A">Group A (₹480)</option>
+            <option value="B">Group B (₹360)</option>
+            <option value="C">Group C (₹300)</option>
+            <option value="D">Group D (₹180)</option>
+          </select>
+        </div>
+        <div>
+          <label>अंशदान (₹)</label>
+          <input type="number" id="gsub" readonly>
+        </div>
+        <div>
+          <label>प्रारंभ तिथि</label>
+          <input type="date" id="gs" value="1995-07-01">
+        </div>
+        <div>
+          <label>समाप्ति तिथि</label>
+          <input type="date" id="ge" value="2025-06-30">
+        </div>
+      </div>
+      <button class="btn" onclick="doGis()">GIS गणना</button>
+      <div class="res" id="gres">
+        <h3>GIS परिणाम</h3>
+        <table>
+          <tr><th>विवरण</th><th>राशि</th></tr>
+          <tr><td>अवधि</td><td id="g1">-</td></tr>
+          <tr><td>महीने</td><td id="g2">-</td></tr>
+          <tr><td>बीमा कवर</td><td id="g3">-</td></tr>
+          <tr><td>बचत निधि (फैक्टर चार्ट)*</td><td id="g4">-</td></tr>
+        </table>
+        <div class="box">
+          <h4>नोट</h4>
+          <ul>
+            <li>बचत ≈70% अंशदान × संचयी फैक्टर (तिमाही चक्रवृद्धि आधारित)</li>
+            <li>अंशदान 2017 से: A480 B360 C300 D180</li>
+            <li>वास्तविक भुगतान शासन Table of Benefits से सत्यापित करें</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: HRA & LEAVE -->
+    <div class="card" id="hra_leave">
+      <h2>मकान किराया भत्ता (HRA) एवं अवकाश नकदीकरण</h2>
+      <div class="err" id="hl_err"></div>
+      <div class="grid">
+        <div>
+          <label>मूल वेतन (₹)</label>
+          <input type="number" id="hl_pay" value="60000">
+        </div>
+        <div>
+          <label>DA %</label>
+          <input type="number" id="hl_da" value="55">
+        </div>
+        <div class="full">
+          <label>HRA श्रेणी / शहर</label>
+          <select id="hl_city">
+            <option value="X">X श्रेणी (मेट्रो / 50 लाख+ जनसंख्या) - 27% / 30%</option>
+            <option value="Y" selected>Y श्रेणी (रायपुर, बिलासपुर आदि) - 18% / 20%</option>
+            <option value="Z">Z श्रेणी (अन्य शहर / ग्रामीण) - 9% / 10%</option>
+            <option value="CG_STATE">छत्तीसगढ़ राज्य फ्लैट स्लैब / 10%</option>
+          </select>
+        </div>
+        <div>
+          <label>अवकाश शेष दिन (EL - अधिकतम 300)</label>
+          <input type="number" id="hl_el" value="300" max="300">
+        </div>
+        <div>
+          <label>अर्धवेतन अवकाश (HPL दिन)</label>
+          <input type="number" id="hl_hpl" value="0">
+        </div>
+      </div>
+      <button class="btn" onclick="calcHraLeave()">HRA एवं अवकाश नकदीकरण गणना करें</button>
+
+      <div class="res" id="hl_res">
+        <h3>गणना परिणाम</h3>
+        <table>
+          <tr><th>मद</th><th>राशि</th></tr>
+          <tr><td>मासिक HRA राशि</td><td id="hl_r_hra">-</td></tr>
+          <tr><td>EL अवकाश नकदीकरण (300 दिन तक)</td><td id="hl_r_el">-</td></tr>
+          <tr><td>HPL अवकाश नकदीकरण</td><td id="hl_r_hpl">-</td></tr>
+          <tr class="tot"><td>कुल अवकाश नकदीकरण (EL + HPL)</td><td id="hl_r_tot">-</td></tr>
+        </table>
+        <div class="box">
+          <h4>सूत्र निर्देश</h4>
+          <ul>
+            <li>अवकाश नकदीकरण = [(मूल वेतन + DA) × दिनों की संख्या] ÷ 30</li>
+            <li>अधिकतम EL सीमा 300 दिवस निर्धारित है।</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: RULES -->
+    <div class="card" id="rules_tab">
+      <h2>शासकीय सेवा एवं पेंशन नियम निर्देशिका</h2>
+
+      <div class="rule-intro">
+        <b>छत्तीसगढ़ सिविल सेवा (पेंशन) नियम, 1976</b> एवं <b>CCS Pension Rules, 1972</b> पर आधारित विस्तृत मार्गदर्शिका। 
+        वर्ष 2022 से छत्तीसगढ़ में पुरानी पेंशन योजना (OPS) पुनः बहाल की गई है। यह निर्देशिका केवल सूचनात्मक उद्देश्य के लिए है — अंतिम भुगतान विभाग के आधिकारिक आदेशों के अनुसार ही मान्य होगा।
+      </div>
+      
+      <!-- 1. PENSION -->
+      <div class="rule-card">
+        <h3>🏛️ 1. पेंशन पात्रता एवं गणना</h3>
+        
+        <h4>1.1 पात्रता शर्तें</h4>
+        <ul>
+          <li><b>न्यूनतम अर्हकारी सेवा:</b> नियमित मासिक पेंशन हेतु कम से कम <b>10 वर्ष</b> (20 छमाही) अनिवार्य। 10 वर्ष से कम सेवा पर केवल सेवा उपदान देय।</li>
+          <li><b>पूर्ण पेंशन:</b> छत्तीसगढ़ नियमों में <b>33 वर्ष</b> (66 छमाही) सेवा पूर्ण होने पर अंतिम मूल वेतन का <b>50%</b> पूर्ण पेंशन। CCS नियमों में 20 वर्ष सेवा पर भी पूर्ण 50% पेंशन देय।</li>
+          <li><b>सेवानिवृत्ति आयु:</b> छत्तीसगढ़ में सामान्य सेवानिवृत्ति आयु <b>62 वर्ष</b>।</li>
+          <li><b>स्वैच्छिक सेवानिवृत्ति (VRS):</b> नवीनतम संशोधन के अनुसार न्यूनतम <b>17 वर्ष</b> अर्हकारी सेवा पूर्ण करने के बाद VRS लिया जा सकता है।</li>
+        </ul>
+
+        <h4>1.2 पेंशन गणना सूत्र</h4>
+        <p><code>मासिक मूल पेंशन = (अंतिम मूल वेतन × अर्हतादायी सेवा की छमाही (अधिकतम 66)) ÷ 132</code></p>
+        <ul>
+          <li>3 माह या अधिक = 1 छमाही, 9 माह या अधिक = 2 छमाही जोड़ी जाती है।</li>
+          <li>अधिकतम छमाही सीमा 66 रखी गई है।</li>
+        </ul>
+
+        <h4>1.3 पारिवारिक पेंशन</h4>
+        <ul>
+          <li><b>बढ़ी हुई दर (Enhanced Rate):</b> न्यूनतम 7 वर्ष निरंतर सेवा होने पर मृत्यु की तिथि से 7 वर्ष तक या कर्मचारी की 67 वर्ष आयु तक (जो पहले हो) — अंतिम मूल वेतन का <b>50%</b>।</li>
+          <li><b>सामान्य दर (Normal Rate):</b> बढ़ी हुई अवधि समाप्त होने पर या 7 वर्ष से कम सेवा पर — अंतिम मूल वेतन का <b>30%</b>।</li>
+          <li><b>पात्रता क्रम:</b> पति/पत्नी → 25 वर्ष तक की आयु के संतान → पूर्णतः आश्रित माता-पिता।</li>
+        </ul>
+
+        <h4>1.4 पेंशन सारांशीकरण (Commutation)</h4>
+        <ul>
+          <li>अधिकतम <b>40%</b> मूल पेंशन का कम्यूटेशन अनुमत।</li>
+          <li>सेवानिवृत्ति से 1 वर्ष के भीतर आवेदन पर मेडिकल बोर्ड की आवश्यकता नहीं।</li>
+          <li>15 वर्ष तक केवल 60% पेंशन मिलती है। 15 वर्ष पूर्ण होने पर पूर्ण पेंशन स्वतः बहाल।</li>
+          <li><b>महंगाई राहत (DR)</b> हमेशा 100% मूल पेंशन पर ही देय होती है।</li>
+        </ul>
+      </div>
+
+      <!-- 2. GRATUITY / DCRG -->
+      <div class="rule-card">
+        <h3>💰 2. मृत्यु-सह-सेवानिवृत्ति उपादान (DCRG / Gratuity)</h3>
+        
+        <h4>2.1 उपादान के प्रकार</h4>
+        <ul>
+          <li><b>सेवानिवृत्ति उपादान:</b> नियमित सेवानिवृत्ति पर। न्यूनतम 5 वर्ष अर्हकारी सेवा आवश्यक।</li>
+          <li><b>मृत्यु उपादान:</b> सेवाकाल में मृत्यु होने पर परिवार/नॉमिनी को। कोई न्यूनतम सेवा शर्त नहीं (प्रथम दिन से भी देय)।</li>
+          <li><b>सेवा उपादान:</b> 10 वर्ष से कम सेवा होने पर पेंशन के बदले एकमुश्त राशि।</li>
+        </ul>
+
+        <h4>2.2 सेवानिवृत्ति उपादान गणना</h4>
+        <p><code>Retirement Gratuity = [(अंतिम मूल वेतन + DA) × छमाही] ÷ 4</code></p>
+        <ul>
+          <li>अधिकतम सेवा 33 वर्ष (66 छमाही) मान्य।</li>
+          <li>अधिकतम राशि: 16.5 महीने के वेतन (Basic + DA) या वैधानिक सीमा, जो कम हो।</li>
+        </ul>
+
+        <h4>2.3 मृत्यु उपादान स्लैब</h4>
+        <table class="rule-table">
+          <thead>
+            <tr><th>अर्हतादायी सेवा अवधि</th><th>देय मृत्यु उपादान</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1 वर्ष से कम</td><td>अंतिम मासिक वेतन का 2 गुना</td></tr>
+            <tr><td>1 वर्ष से 5 वर्ष से कम</td><td>अंतिम मासिक वेतन का 6 गुना</td></tr>
+            <tr><td>5 वर्ष से 11 वर्ष से कम</td><td>अंतिम मासिक वेतन का 12 गुना</td></tr>
+            <tr><td>11 वर्ष से 20 वर्ष से कम</td><td>अंतिम मासिक वेतन का 20 गुना</td></tr>
+            <tr><td>20 वर्ष या अधिक</td><td>प्रत्येक पूर्ण छमाही का 1/4 (अधिकतम 33 गुना)</td></tr>
+          </tbody>
+        </table>
+
+        <h4>2.4 अधिकतम वित्तीय सीमा</h4>
+        <ul>
+          <li><b>छत्तीसगढ़ (CG Rules):</b> ₹20,00,000 (बीस लाख रुपये)</li>
+          <li><b>केंद्र (CCS Rules):</b> ₹25,00,000 (पच्चीस लाख रुपये) — DA 50% पार होने के बाद</li>
+        </ul>
+
+        <div class="rule-note">
+          <b>नोट:</b> विभागीय जांच या न्यायालय मामला लंबित होने पर ग्रेच्युटी रोकी जा सकती है। शासकीय बकाया (आवास किराया, अग्रिम आदि) ग्रेच्युटी से वसूल किया जा सकता है। नॉमिनेशन (Form-1/2) अनिवार्य है।
+        </div>
+      </div>
+
+      <!-- 3. HRA -->
+      <div class="rule-card">
+        <h3>🏠 3. मकान किराया भत्ता (HRA) नियम</h3>
+        
+        <h4>3.1 7वें वेतन आयोग अनुसार केंद्रीय दरें (कैलकुलेटर में प्रयुक्त)</h4>
+        <table class="rule-table">
+          <thead>
+            <tr><th>श्रेणी</th><th>उदाहरण</th><th>HRA दर</th><th>DA ≥ 50% पर</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>X</b></td><td>मेट्रो / 50 लाख+ जनसंख्या</td><td>27%</td><td>30%</td></tr>
+            <tr><td><b>Y</b></td><td>रायपुर, बिलासपुर आदि</td><td>18%</td><td>20%</td></tr>
+            <tr><td><b>Z</b></td><td>अन्य शहर / ग्रामीण</td><td>9%</td><td>10%</td></tr>
+          </tbody>
+        </table>
+
+        <h4>3.2 छत्तीसगढ़ राज्य की प्रमुख दरें (संदर्भ)</h4>
+        <ul>
+          <li><b>बी-2 श्रेणी (Y):</b> रायपुर, दुर्ग-भिलाई, बिलासपुर — लगभग 9% से 10%</li>
+          <li><b>सी श्रेणी:</b> कोरबा, राजनांदगांव, जगदलपुर, रायगढ़ आदि — 7% से 9%</li>
+          <li><b>अन्य / ग्रामीण (Z):</b> 6% से 8%</li>
+        </ul>
+
+        <h4>3.3 पात्रता प्रतिबंध</h4>
+        <ul>
+          <li>शासकीय आवास आवंटित होने पर HRA देय नहीं। लाइसेंस शुल्क देना अनिवार्य।</li>
+          <li>पति-पत्नी दोनों शासकीय एवं एक ही मुख्यालय पर पदस्थ हों तो केवल एक ही HRA का दावा कर सकता है (एक ही मकान में रहने पर)।</li>
+          <li>अन्य शासकीय सेवक के क्वार्टर में साझा निवास पर HRA नहीं मिलता।</li>
+        </ul>
+
+        <div class="rule-note">
+          <b>आयकर छूट (धारा 10(13A) – पुरानी व्यवस्था):</b> तीन राशियों में से सबसे कम — (1) प्राप्त HRA, (2) वास्तविक किराया − (Basic+DA का 10%), (3) मेट्रो 50% / गैर-मेट्रो 40% मूल वेतन। वार्षिक किराया ₹1 लाख से अधिक हो तो मकान मालिक का PAN अनिवार्य।
+        </div>
+      </div>
+
+      <!-- 4. LEAVE ENCASHMENT -->
+      <div class="rule-card">
+        <h3>🏖️ 4. अवकाश नकदीकरण (Leave Encashment)</h3>
+        
+        <h4>4.1 गणना सूत्र</h4>
+        <p><code>अवकाश नकदीकरण = [(अंतिम मूल वेतन + लागू DA) × EL दिनों की संख्या (अधिकतम 300)] ÷ 30</code></p>
+        <ul>
+          <li>HRA या अन्य भत्ते शामिल नहीं किए जाते।</li>
+          <li>सेवानिवृत्ति पर अधिकतम <b>300 दिवस</b> EL का नकदीकरण अनुमत।</li>
+          <li>EL 300 से कम होने पर HPL जोड़कर 300 दिन तक पूरा किया जा सकता है (नियमानुसार)।</li>
+        </ul>
+
+        <h4>4.2 सेवाकाल के दौरान (LTC के समय)</h4>
+        <ul>
+          <li>LTC लेते समय अधिकतम <b>10 दिन</b> EL का नकदीकरण।</li>
+          <li>पूरे सेवाकाल में कुल अधिकतम <b>60 दिन</b> तक (यह 300 दिन की सीमा से अलग है)।</li>
+        </ul>
+
+        <h4>4.3 आयकर नियम (धारा 10(10AA))</h4>
+        <ul>
+          <li><b>शासकीय कर्मचारी:</b> सेवानिवृत्ति पर मिलने वाली पूरी राशि आयकर से <b>पूर्णतः मुक्त</b>।</li>
+          <li><b>निजी कर्मचारी:</b> अधिकतम छूट सीमा ₹25 लाख।</li>
+          <li>सेवाकाल के दौरान भुगतान (जैसे LTC) पूरी तरह कर योग्य।</li>
+        </ul>
+
+        <div class="rule-note">
+          <b>सावधानी:</b> विभागीय जांच या आपराधिक मामला लंबित होने पर अवकाश नकदीकरण रोका जा सकता है। दोषमुक्त होने के बाद ही भुगतान होता है।
+        </div>
+      </div>
+
+      <!-- 5. GIS -->
+      <div class="rule-card">
+        <h3>🛡️ 5. समूह बीमा योजना (GIS)</h3>
+        
+        <h4>5.1 मुख्य विशेषताएँ</h4>
+        <ul>
+          <li>यह <b>बीमा-सह-बचत</b> योजना है।</li>
+          <li><b>बीमा निधि:</b> सेवाकाल में मृत्यु पर नॉमिनी को एकमुश्त बीमा कवर।</li>
+          <li><b>बचत निधि:</b> सेवानिवृत्ति / त्यागपत्र पर जमा राशि ब्याज सहित वापस।</li>
+          <li>नियमित कर्मचारियों के लिए अनिवार्य। प्रीमियम वेतन से काटा जाता है।</li>
+          <li>मेडिकल टेस्ट की आवश्यकता नहीं।</li>
+        </ul>
+
+        <h4>5.2 मासिक अंशदान एवं कवर (2017 से)</h4>
+        <table class="rule-table">
+          <thead>
+            <tr><th>समूह</th><th>मासिक अंशदान</th><th>बीमा कवर</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Group A</td><td>₹480</td><td>₹4,80,000</td></tr>
+            <tr><td>Group B</td><td>₹360</td><td>₹3,60,000</td></tr>
+            <tr><td>Group C</td><td>₹300</td><td>₹3,00,000</td></tr>
+            <tr><td>Group D</td><td>₹180</td><td>₹1,80,000</td></tr>
+          </tbody>
+        </table>
+
+        <h4>5.3 बचत निधि</h4>
+        <ul>
+          <li>अंशदान का लगभग <b>70%</b> बचत निधि में जाता है (तिमाही चक्रवृद्धि आधारित)।</li>
+          <li>30% भाग जोखिम बीमा कवर हेतु उपयोग होता है।</li>
+          <li>वास्तविक भुगतान शासन की Table of Benefits से सत्यापित करें।</li>
+        </ul>
+
+        <div class="rule-note">
+          <b>पात्रता:</b> नियमित/स्थायी कर्मचारी। दैनिक वेतनभोगी, संविदा, अंशकालिक एवं पुनर्नियोजन कर्मी आमतौर पर पात्र नहीं। आत्महत्या या आपराधिक कृत्य से मृत्यु पर क्लेम अस्वीकृत हो सकता है। नॉमिनेशन अनिवार्य।
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      <div class="badge"><b>Satyamani Kushwaha</b><br>HIGH COURT OF CHHATTISGARH</div>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+function go(id,t){
+  document.querySelectorAll('.card').forEach(function(c){c.classList.remove('on')});
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on')});
+  document.getElementById(id).classList.add('on');
+  document.getElementById(t).classList.add('on');
+}
+
+function togDa(){
+  var m=document.getElementById('daMode').value==='manual';
+  document.getElementById('manDa').className=m?'':'hidden';
+  document.getElementById('autoDa').className=m?'hidden':'';
+  if(!m)fetchDa();
+}
+
+function getDA(ds){
+  if(!ds)return 55;
+  var d=new Date(ds),y=d.getFullYear(),m=d.getMonth()+1;
+  if(y>=2026)return 58;
+  if(y===2025)return m>=7?55:53;
+  if(y===2024)return m>=7?53:50;
+  if(y===2023)return m>=7?46:42;
+  if(y===2022)return m>=7?38:34;
+  if(y===2021)return m>=7?31:28;
+  if(y===2020)return 17;
+  if(y===2019)return m>=7?17:12;
+  if(y===2018)return m>=7?9:7;
+  if(y===2017)return m>=7?5:4;
+  if(y===2016)return m>=7?2:0;
+  return 0;
+}
+
+function fetchDa(){
+  if(document.getElementById('daMode').value!=='auto')return;
+  var r=getDA(document.getElementById('retire').value);
+  document.getElementById('daIn').value=r;
+  document.getElementById('daShow').value=r+'%';
+}
+
+function setGis(){
+  var s={A:480,B:360,C:300,D:180};
+  document.getElementById('gsub').value=s[document.getElementById('ggrp').value];
+}
+
+function dateDiff(a,b){
+  var s=new Date(a),e=new Date(b);
+  if(e<s)return null;
+  var y=e.getFullYear()-s.getFullYear(),m=e.getMonth()-s.getMonth(),d=e.getDate()-s.getDate();
+  if(d<0){m--;d+=new Date(e.getFullYear(),e.getMonth(),0).getDate()}
+  if(m<0){y--;m+=12}
+  return{y:y,m:m,d:d,tm:y*12+m};
+}
+
+function halfY(diff){
+  var h=diff.y*2;
+  if(diff.m>=9)h+=2;
+  else if(diff.m>=3)h+=1;
+  return h>66?66:h;
+}
+
+function rupee(n){
+  return '₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:2,minimumFractionDigits:2});
+}
+
+function monthName(m){
+  return ['जन','फर','मार्च','अप्रै','मई','जून','जुल','अग','सित','अक्टू','नव','दिस'][m];
+}
+
+function gisFactor(months){
+  var f={12:1.04,24:2.16,36:3.37,48:4.67,60:6.07,72:7.57,84:9.19,96:10.93,108:12.81,120:14.83,132:17,144:19.34,156:21.85,168:24.55,180:27.46,192:30.59,204:33.95,216:37.57,228:41.45,240:45.63,252:50.12,264:54.95,276:60.14,288:65.71,300:71.7,312:78.13,324:85.04,336:92.46,348:100.44,360:109.01,372:118.21,384:128.1,396:138.71,408:150.1,420:162.33,432:175.46,444:189.55,456:204.68,468:220.91,480:238.31};
+  var best=12,md=Math.abs(months-12);
+  for(var k in f){var d=Math.abs(months-parseInt(k));if(d<md){md=d;best=parseInt(k)}}
+  return f[best]*(months/best);
+}
+
+function calc(){
+  var rule=document.getElementById('rule').value;
+  var ptype=document.getElementById('ptype').value;
+  var pay=parseFloat(document.getElementById('pay').value);
+  fetchDa();
+  var da=parseFloat(document.getElementById('daIn').value)||0;
+  var join=document.getElementById('join').value;
+  var retire=document.getElementById('retire').value;
+  var arrearEnd=document.getElementById('arrearEnd').value||new Date().toISOString().slice(0,10);
+  var cper=parseFloat(document.getElementById('cper').value)||0;
+  var cfac=parseFloat(document.getElementById('cfac').value)||0;
+  var err=document.getElementById('err');
+  err.style.display='none';
+
+  if(!pay||pay<=0){err.innerText='वैध वेतन दर्ज करें।';err.style.display='block';return}
+  if(!join||!retire){err.innerText='सेवा प्रारंभ और सेवानिवृत्ति तारीख चुनें।';err.style.display='block';return}
+  var diff=dateDiff(join,retire);
+  if(!diff){err.innerText='सेवानिवृत्ति तिथि बाद की होनी चाहिए।';err.style.display='block';return}
+
+  var hy=halfY(diff);
+  var isFam=(ptype==='family'||ptype==='family50');
+  if(!isFam&&ptype!=='invalid'&&hy<20){
+    err.innerText='सेवा '+diff.y+'व '+diff.m+'म · न्यूनतम 10 वर्ष आवश्यक।';
+    err.style.display='block';document.getElementById('pres').style.display='none';return}
+  if(ptype==='vrs'&&hy<40){err.innerText='VRS हेतु न्यूनतम 20 वर्ष आवश्यक।';err.style.display='block';return}
+
+  var minP=rule==='CCS'?9000:7750;
+  var daAmt=pay*(da/100);
+  var bp=0,lines=[];
+
+  if(isFam){
+    bp=ptype==='family50'?pay*0.5:pay*0.3;
+    lines.push(ptype==='family50'?'परिवार उच्च: Pay × 50%':'परिवार: Pay × 30%');
+  }else if(rule==='CG'){
+    bp=(pay*hy)/132;
+    lines.push('CG: (मूल × छमाही)/132 = ('+pay+' × '+hy+')/132');
+  }else{
+    if(hy>=40){bp=pay*0.5;lines.push('CCS 20+: Pay × 50%')}
+    else{bp=pay*0.5*(hy/40);lines.push('CCS <20: Pay×50%×(छमाही/40)')}
+  }
+  if(bp<minP)bp=minP;
+
+  var grat=((pay+daAmt)*hy)/4;
+  var maxG=rule==='CCS'?2500000:2000000;
+  if(grat>maxG)grat=maxG;
+  if(grat>(pay+daAmt)*16.5)grat=(pay+daAmt)*16.5;
+
+  var com=0,red=bp,cv=0;
+  if(!isFam){
+    var pct=Math.min(cper,40);
+    com=bp*(pct/100);red=bp-com;cv=com*cfac*12;
+  }
+  var monthly=isFam?bp:red;
+  var fam=Math.max(pay*0.3,minP);
+  var names={super:'अधिवार्षिकी',vrs:'VRS',invalid:'असमर्थता',compulsory:'अनिवार्य',family:'परिवार 30%',family50:'परिवार 50%'};
+
+  document.getElementById('rname').innerText=names[ptype]+' · '+(rule==='CG'?'CG 1976':'CCS');
+  document.getElementById('r1').innerText=diff.y+' वर्ष, '+diff.m+' माह, '+diff.d+' दिन';
+  document.getElementById('r2').innerText=hy+' छमाही';
+  document.getElementById('r3').innerText=da+'%';
+  document.getElementById('r4').innerText=rupee(bp);
+  document.getElementById('r5').innerText=isFam?'—':rupee(com);
+  document.getElementById('r6').innerText=isFam?rupee(bp):rupee(red);
+  document.getElementById('r7').innerText=isFam?'—':rupee(cv);
+  document.getElementById('r8').innerText=rupee(grat);
+  document.getElementById('r9').innerText=rupee(fam);
+
+  /* Arrear Table */
+  var body=document.getElementById('arrearBody');
+  body.innerHTML='';
+  var cur=new Date(new Date(retire).getFullYear(),new Date(retire).getMonth(),1);
+  var endM=new Date(new Date(arrearEnd).getFullYear(),new Date(arrearEnd).getMonth(),1);
+  if(cur>endM){
+    body.innerHTML='<tr><td colspan="6">एरियर अवधि शून्य।</td></tr>';
+  }else{
+    var i=0,sumB=0,sumDr=0;
+    while(cur<=endM){
+      i++;
+      var drPct=getDA(cur.toISOString().slice(0,10));
+      var drAmt=monthly*(drPct/100);
+      var total=monthly+drAmt;
+      sumB+=monthly;sumDr+=drAmt;
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td>'+i+'</td><td>'+monthName(cur.getMonth())+' '+cur.getFullYear()+'</td><td>'+rupee(monthly)+'</td><td>'+drPct+'%</td><td>'+rupee(drAmt)+'</td><td>'+rupee(total)+'</td>';
+      body.appendChild(tr);
+      cur.setMonth(cur.getMonth()+1);
+    }
+    document.getElementById('arMonths').innerText=i+' महीने';
+    document.getElementById('arBasicSum').innerText=rupee(sumB);
+    document.getElementById('arDrSum').innerText=rupee(sumDr);
+    document.getElementById('arGrand').innerHTML='<b>'+rupee(sumB+sumDr)+'</b>';
+  }
+
+  lines.unshift('नियम: '+(rule==='CG'?'CG Pension Rules 1976':'CCS 1972'));
+  lines.push('छमाही: 3 माह+=1 · 9 माह+=2 · अधिकतम 66');
+  lines.push('एरियर: शुद्ध पेंशन + माह का ऐतिहासिक DR%');
+  document.getElementById('fbox').innerHTML='<ul>'+lines.map(function(l){return '<li>'+l+'</li>'}).join('')+'</ul>';
+  document.getElementById('pres').style.display='block';
+}
+
+function doGis(){
+  var g=document.getElementById('ggrp').value;
+  var s=document.getElementById('gs').value,e=document.getElementById('ge').value;
+  var sub=parseFloat(document.getElementById('gsub').value)||0;
+  var err=document.getElementById('gerr');
+  err.style.display='none';
+  if(!s||!e){err.innerText='दोनों तारीखें चुनें।';err.style.display='block';return}
+  var diff=dateDiff(s,e);
+  if(!diff){err.innerText='समाप्ति बाद की हो।';err.style.display='block';return}
+  var cov={A:480000,B:360000,C:300000,D:180000};
+  var part=sub*0.7;
+  var factor=gisFactor(diff.tm);
+  var sav=part*factor;
+  document.getElementById('g1').innerText=diff.y+'व '+diff.m+'म '+diff.d+'दि';
+  document.getElementById('g2').innerText=diff.tm+' महीने';
+  document.getElementById('g3').innerText=rupee(cov[g]);
+  document.getElementById('g4').innerText=rupee(Math.round(sav));
+  document.getElementById('gres').style.display='block';
+}
+
+function calcHraLeave(){
+  var p=parseFloat(document.getElementById('hl_pay').value)||0;
+  var d=parseFloat(document.getElementById('hl_da').value)||0;
+  var c=document.getElementById('hl_city').value;
+  var el=parseFloat(document.getElementById('hl_el').value)||0;
+  var hpl=parseFloat(document.getElementById('hl_hpl').value)||0;
+  var err=document.getElementById('hl_err');
+  err.style.display='none';
+
+  if(p<=0){err.innerText='वैध वेतन दर्ज करें।';err.style.display='block';return}
+  
+  var hRate=0.10;
+  if(c==='X') hRate=(d>=50)?0.30:0.27;
+  else if(c==='Y') hRate=(d>=50)?0.20:0.18;
+  else if(c==='Z') hRate=(d>=50)?0.10:0.09;
+  else if(c==='CG_STATE') hRate=0.10;
+
+  var hraAmt=p*hRate;
+  var perDay=(p+(p*(d/100)))/30;
+  var elAmt=Math.min(el,300)*perDay;
+  var hplAmt=(hpl*perDay)/2;
+  var totLeave=elAmt+hplAmt;
+
+  document.getElementById('hl_r_hra').innerText=rupee(hraAmt)+' ('+(hRate*100)+'%)';
+  document.getElementById('hl_r_el').innerText=rupee(elAmt);
+  document.getElementById('hl_r_hpl').innerText=rupee(hplAmt);
+  document.getElementById('hl_r_tot').innerText=rupee(totLeave);
+  document.getElementById('hl_res').style.display='block';
+}
+
+document.getElementById('arrearEnd').value=new Date().toISOString().slice(0,10);
+setGis();fetchDa();togDa();calc();
+</script>
+
+<script>
+(function(){
+  var KEY = 'pension_auth_v2';
+  var PASS = 'satyamani@hc';
+  function unlock(){
+    document.getElementById('pw-gate').style.display = 'none';
+    document.getElementById('app-root').style.display = 'block';
+    try { sessionStorage.setItem(KEY, '1'); } catch(e){}
+  }
+  window.checkPw = function(){
+    var v = document.getElementById('pw-input').value;
+    if (v === PASS) {
+      unlock();
+    } else {
+      document.getElementById('pw-err').style.display = 'block';
+      document.getElementById('pw-input').value = '';
+      document.getElementById('pw-input').focus();
+    }
+  };
+  var inp = document.getElementById('pw-input');
+  if (inp) inp.addEventListener('keydown', function(e){ if (e.key === 'Enter') checkPw(); });
+  try { if (sessionStorage.getItem(KEY) === '1') unlock(); } catch(e){}
+})();
+</script>
+
+<script>
+// PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js')
+      .then(function(reg) { console.log('Service Worker registered'); })
+      .catch(function(err) { console.log('SW registration failed:', err); });
+  });
+}
+</script>
+</body>
+</html>
